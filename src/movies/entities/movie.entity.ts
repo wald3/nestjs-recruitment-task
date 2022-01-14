@@ -1,5 +1,10 @@
 import { Exclude } from 'class-transformer';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Movie {
@@ -9,17 +14,21 @@ export class Movie {
 
   @Exclude()
   @Column()
-  addedBy: string;
+  userId: string;
 
-  @Column()
-  title: string;
+  @Column({ nullable: true })
+  title?: string;
 
-  @Column()
-  released: Date;
+  @Column({ nullable: true })
+  released?: Date;
 
-  @Column()
-  genre: string;
+  @Column({ nullable: true })
+  genre?: string;
 
-  @Column()
-  director: string;
+  @Column({ nullable: true })
+  director?: string;
+
+  @Exclude()
+  @CreateDateColumn()
+  public createdAt: Date;
 }

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateMovieDto } from '../dto/create-movie.dto';
 import { Movie } from '../entities/movie.entity';
 
 @Injectable()
@@ -11,16 +10,43 @@ export class MoviesService {
     private readonly moviesRepository: Repository<Movie>,
   ) {}
 
-  async create(createMovieDto: CreateMovieDto): Promise<Movie> {
-    const movie = await this.moviesRepository.create(createMovieDto);
+  async create(movieData: Partial<Movie>): Promise<Movie> {
+    const movie = await this.moviesRepository.create(movieData);
     return this.moviesRepository.save(movie);
   }
 
-  findAllByUserId(id: string): Promise<Movie[]> {
-    return this.moviesRepository.find({ where: { addedBy: id } });
+  async findAllByUserId(id: string): Promise<Movie[]> {
+    return this.moviesRepository.find({ where: { userId: id } });
   }
 
-  countAllByUserId(id: string): Promise<number> {
-    return this.moviesRepository.count({ where: { addedBy: id } });
+  async countAllByUserId(id: string): Promise<number> {
+    const query = this.moviesRepository
+      .createQueryBuilder('m')
+      .where({ userId: id })
+      .select([
+        `date_trunc('month', m.createdAt) AS month`,
+        `count(*) AS movies`,
+      ])
+      .groupBy('month')
+      .orderBy('month', 'DESC');
+
+    const result = await query.getRawOne<{
+      month: string;
+      movies: number;
+    }>();
+
+    if (result) {
+      const { month: lastMonth } = result;
+      if (lastMonth) {
+        const currentMonthNumber = new Date(Date.now()).getMonth();
+        const lastMonthNumber = new Date(lastMonth).getMonth();
+
+        if (currentMonthNumber != lastMonthNumber) {
+          return 0;
+        }
+      }
+
+      return result.movies;
+    } else return 0;
   }
 }

@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MovieData } from '../interfaces/movie-data.interface';
+import { MovieDataDto } from '../dto/movie-data.dto';
 
 @Injectable()
 export class OMDBApiService {
@@ -15,21 +15,36 @@ export class OMDBApiService {
     this.apiKey = this.configService.get<string>('OMDB_API_KEY');
   }
 
-  public async getMovieByTitle(title: string): Promise<any> {
-    if (!title) throw new BadRequestException('Title is absent!');
-
-    const movie = await this.http
-      .get<MovieData>(this.url, {
+  public async getMovieByTitle(title: string): Promise<MovieDataDto> {
+    const movieResponse = await this.http
+      .get<MovieDataDto>(this.url, {
         params: {
           apiKey: this.apiKey,
           t: title,
         },
-        transformResponse: (r: { data: MovieData }) => r.data,
+        transformResponse: (dataJson: string) => {
+          const emptyValue = 'N/A';
+          const data = JSON.parse(dataJson);
+
+          const movie: MovieDataDto = {
+            title: data.Title,
+            released:
+              data.Released == emptyValue ? null : new Date(data.Released),
+            genre: data.Genre,
+            director: data.Director,
+          };
+
+          // If data from api is an accessble then insert NULL instead
+          Object.keys(movie).forEach(
+            (key) =>
+              (movie[key] = movie[key] === emptyValue ? null : movie[key]),
+          );
+
+          return movie;
+        },
       })
       .toPromise();
 
-    console.log(movie);
-
-    return null;
+    return movieResponse?.data;
   }
 }

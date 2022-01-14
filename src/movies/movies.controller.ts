@@ -10,7 +10,9 @@ import {
 import { ReqUser } from '../auth/decorators/req-user.decorator';
 import { JwtGuard } from '../auth/guards/jwt.guard';
 import { User } from '../auth/interfaces/user.interface';
-import { CreateMovieDto } from './dto/create-movie.dto';
+import { Movie } from './entities/movie.entity';
+import { MissingTitleException } from './exceptions/missing-title.exception';
+import { MovieLimitException } from './exceptions/movie-limit.exception';
 import { MoviesService } from './services/movies.service';
 import { OMDBApiService } from './services/omdb.service';
 
@@ -24,19 +26,26 @@ export class MoviesController {
   @Post('/')
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtGuard)
-  async create(@Body() createMovieDto: CreateMovieDto, @ReqUser() user: User) {
-    if ((await this.moviesService.countAllByUserId(user.id)) < user.limit) {
-      const { title } = createMovieDto;
+  async create(
+    @Body('title') title: string,
+    @ReqUser() user: User,
+  ): Promise<Movie> {
+    if (!title) throw new MissingTitleException();
 
+    const movieCount = await this.moviesService.countAllByUserId(user.id);
+
+    if (movieCount < user.limit) {
       const movieData = await this.omdbApiService.getMovieByTitle(title);
-      return this.moviesService.create(createMovieDto);
+      return this.moviesService.create({ userId: user.id, ...movieData });
+    } else {
+      throw new MovieLimitException();
     }
   }
 
   @Get('/')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  findAll(@ReqUser() user: User) {
+  async findAll(@ReqUser() user: User): Promise<Movie[]> {
     return this.moviesService.findAllByUserId(user.id);
   }
 }

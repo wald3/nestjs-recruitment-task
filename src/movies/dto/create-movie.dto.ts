@@ -1,6 +1,7 @@
-import { IsNotEmpty } from 'class-validator';
-
 export class CreateMovieDto {
-  @IsNotEmpty()
+  userId: string;
   title: string;
+  released: Date;
+  genre: string;
+  director: string;
 }
