@@ -1,25 +1,26 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MovieDataDto } from '../dto/movie-data.dto';
+import { UpdateMovieDto } from '../dto/update-movie.dto';
 import { MovieApiTimeoutException } from '../exceptions/movie-api-timeout.exception';
 import { MovieNotFoundException } from '../exceptions/movie-not-found.exception';
 
 @Injectable()
 export class OMDBApiService {
-  private readonly url = `http://www.omdbapi.com`;
+  private readonly url;
   private readonly apiKey: string;
 
   constructor(
     private readonly http: HttpService,
     private readonly configService: ConfigService,
   ) {
+    this.url = this.configService.get<string>('OMDB_BASE_URL');
     this.apiKey = this.configService.get<string>('OMDB_API_KEY');
   }
 
-  public async getMovieByTitle(title: string): Promise<MovieDataDto> {
+  public async getMovieByTitle(title: string): Promise<UpdateMovieDto> {
     try {
-      const movie: MovieDataDto = await this.http
+      const movie: UpdateMovieDto = await this.http
         .get(this.url, {
           params: {
             apiKey: this.apiKey,
@@ -33,7 +34,7 @@ export class OMDBApiService {
 
           const emptyValue = 'N/A';
 
-          const movie: MovieDataDto = {
+          const movie: UpdateMovieDto = {
             title: data.Title,
             released:
               data.Released == emptyValue ? null : new Date(data.Released),

@@ -63,7 +63,12 @@ export class MoviesController {
 
     if (movieCount < user.limit) {
       const movieData = await this.omdbApiService.getMovieByTitle(title);
-      return this.moviesService.create({ userId: user.id, ...movieData });
+
+      return this.moviesService.create({
+        userId: user.id,
+        title: movieData.title || title,
+        ...movieData,
+      });
     } else {
       throw new MovieLimitException();
     }

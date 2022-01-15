@@ -4,6 +4,8 @@ import * as Joi from 'joi';
 const joiSchema: ConfigModuleOptions = {
   validationSchema: Joi.object({
     OMDB_API_KEY: Joi.string().required(),
+    OMDB_BASE_URL: Joi.string().required(),
+
     JWT_SECRET: Joi.string().required(),
 
     POSTGRES_PASSWORD: Joi.string().required(),
