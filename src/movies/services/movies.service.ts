@@ -22,31 +22,21 @@ export class MoviesService {
   async countAllByUserId(id: string): Promise<number> {
     const query = this.moviesRepository
       .createQueryBuilder('m')
+      .select([`count(*) as "movieCount"`])
       .where({ userId: id })
-      .select([
-        `date_trunc('month', m.createdAt) AS month`,
-        `count(*) AS movies`,
-      ])
-      .groupBy('month')
-      .orderBy('month', 'DESC');
+      // first day of the current month
+      .andWhere(`m."createdAt" > date_trunc('month', current_date)::date`)
+      // last day of the current month
+      .andWhere(
+        `m."createdAt" < (date_trunc('month', now()) + interval '1 month - 1 day')::date`,
+      );
 
-    const result = await query.getRawOne<{
-      month: string;
-      movies: number;
-    }>();
+    console.log(query.getQueryAndParameters());
 
-    if (result) {
-      const { month: lastMonth } = result;
-      if (lastMonth) {
-        const currentMonthNumber = new Date(Date.now()).getMonth();
-        const lastMonthNumber = new Date(lastMonth).getMonth();
+    const result = await query.getRawOne<{ movieCount: number }>();
 
-        if (currentMonthNumber != lastMonthNumber) {
-          return 0;
-        }
-      }
+    console.log(result);
 
-      return result.movies;
-    } else return 0;
+    return result?.movieCount || 0;
   }
 }
