@@ -1,4 +1,4 @@
-export class CreateMovieDto {
+export class MovieDto {
   userId: string;
   title: string;
   released: Date;

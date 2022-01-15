@@ -31,11 +31,7 @@ export class MoviesService {
         `m."createdAt" < (date_trunc('month', now()) + interval '1 month - 1 day')::date`,
       );
 
-    console.log(query.getQueryAndParameters());
-
     const result = await query.getRawOne<{ movieCount: number }>();
-
-    console.log(result);
 
     return result?.movieCount || 0;
   }

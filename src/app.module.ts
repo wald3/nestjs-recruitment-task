@@ -7,8 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { joiSchema } from './configs';
 import { MoviesModule } from './movies/movies.module';
 
-// TODO path to migrations fix
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, ...joiSchema }),

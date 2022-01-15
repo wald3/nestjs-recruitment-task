@@ -7,7 +7,7 @@ import { NonExistedRoleException } from '../exceptions/non-existed-role.exceptio
 export class JwtGuard extends AuthGuard('jwt') {
   handleRequest(err: any, user: any, info: Error, ctx: any, status?: any) {
     if (err || info || !user) {
-      throw new UnauthorizedException(err || info);
+      throw new UnauthorizedException(err || info.message);
     }
 
     if (Role[user.role]) user.limit = Role[user.role];
